@@ -14,5 +14,5 @@ fn main() {
     println!("Hello, world!");
     let s = r#"{"key":"val"}"#;
     let a: A = serde_json::from_str(s).unwrap();
-    println!("{:?}", a);
+    println!("{:?}", a); // A { key: "val", key2: "val" }
 }

@@ -1,17 +1,17 @@
 use proc_macro::TokenStream;
-use proc_macro2::TokenStream as TokenStream2;
+//use proc_macro2::TokenStream as TokenStream2;
 use quote::{quote, format_ident};
-use syn::{parse::{Parse, Parser}, parse_macro_input, ItemImpl, DeriveInput, FieldsNamed, AttributeArgs, DataStruct};
+use syn::{parse::{Parse, Parser}, parse_macro_input, DeriveInput, /*AttributeArgs,*/};
 
 #[proc_macro_attribute]
-pub fn custom_derive(raw_args: TokenStream, input: TokenStream) -> TokenStream {
-    let args = parse_macro_input!(raw_args as AttributeArgs);
-    let mut ast = parse_macro_input!(input as DeriveInput);
-    let mut ast_cloned = ast.clone();
+pub fn custom_derive(_raw_args: TokenStream, input: TokenStream) -> TokenStream {
+//    let args = parse_macro_input!(raw_args as AttributeArgs);
+    let ast = parse_macro_input!(input as DeriveInput);
+//    let mut ast_cloned = ast.clone();
     let (actual_fs, synthetic_fs_with_tokens);
     let prefix_path: syn::Path = syn::Path::parse.parse2(quote!{ custom_derive }).expect("PREFIX failed to unwrap : BUG :");
-    match &mut ast_cloned.data {
-        syn::Data::Struct(ref mut s) => match &mut s.fields {
+    match &ast.data {
+        syn::Data::Struct(ref s) => match &s.fields {
             syn::Fields::Named(fields) => {
                 let (actual_fs_, synthetic_fs_) = fields.named.iter().fold((vec![], vec![]), |mut acc, f| {
                     match f.attrs.iter().enumerate().find(|(_, attr)| attr.path == prefix_path) {
@@ -56,11 +56,6 @@ pub fn custom_derive(raw_args: TokenStream, input: TokenStream) -> TokenStream {
     let synthetic_fs_tokens: Vec<_> = synthetic_fs_with_tokens.iter().map(|(_, ts)| ts.clone()).collect();
 
     let output = quote! {
-        #(#struct_attrs)*
-        #[derive(Deserialize)]
-        #struct_vis struct #struct_ident_internal #struct_generics {
-            #(#actual_fs,)*
-        }
 
         #(#struct_attrs)*
         #struct_vis struct #struct_ident #struct_generics {
@@ -73,6 +68,12 @@ pub fn custom_derive(raw_args: TokenStream, input: TokenStream) -> TokenStream {
             where
                 D: Deserializer<'de>
             {
+                #(#struct_attrs)*
+                #[derive(Deserialize)]
+                struct #struct_ident_internal #struct_generics {
+                    #(#actual_fs,)*
+                }
+
                 let si: #struct_ident_internal = Deserialize::deserialize(deserializer)?;
                 Ok(Self {
                     #(#synthetic_fs_idents: #synthetic_fs_tokens,)*
@@ -82,9 +83,5 @@ pub fn custom_derive(raw_args: TokenStream, input: TokenStream) -> TokenStream {
         }
     };
 
-//    quote! {
-//        #ast_cloned
-//    }
-//        .into()
     output.into()
 }
