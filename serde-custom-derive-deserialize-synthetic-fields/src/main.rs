@@ -1,8 +1,8 @@
 use serde::{Serialize, Deserialize, Deserializer};
 use serde_json;
-use mymacro::custom_derive;
+use mymacro::custom_derive_deserialize;
 
-#[custom_derive]
+#[custom_derive_deserialize]
 #[derive(Serialize, Debug)]
 struct A {
     key: String,
