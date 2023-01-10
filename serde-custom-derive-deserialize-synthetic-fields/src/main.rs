@@ -16,9 +16,10 @@ struct A {
 #[derive(Debug)]
 #[allow(dead_code)]
 struct B {
-    key: String,
-    #[custom_derive(extract::<D>(&si.key.as_str())?)]
-    key2: u64,
+    #[serde(rename(deserialize = "key"))] // support of serde attributes
+    key_raw: String,
+    #[custom_derive(extract::<D>(&si.key_raw.as_str())?)] // support of error propagation
+    key: u64,
 }
 
 fn extract<'de, D>(s: &str) -> Result<u64, D::Error>
@@ -39,6 +40,6 @@ fn main() {
     { // example #2 with support of error propagation/bubbling
         let s = r#"{"key":"1234"}"#;
         let b: B = serde_json::from_str(s).unwrap();
-        println!("{:?}", b); // B { key: "1234", key2: 1234 }
+        println!("{:?}", b); // B { key_raw: "1234", key: 1234 }
     }
 }

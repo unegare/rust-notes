@@ -63,13 +63,14 @@ pub fn custom_derive_deserialize(_raw_args: TokenStream, input: TokenStream) -> 
 
     let derive_prefix = syn::Path::parse.parse2(quote!{ derive }).unwrap();
     let serde_prefixes: Vec<_> = vec![quote!{serde}, quote!{serde_as}, quote!{serde_with::serde_as}].into_iter().map(|ts| syn::Path::parse.parse2(ts).unwrap()).collect();
+    let serde_derive_paths: Vec<_> = vec![quote!{Serialize}, quote!{serde::Serialize}].into_iter().map(|ts| syn::Path::parse.parse2(ts).unwrap()).collect();
     let mut derive_serialize_flag = false;
     for attr in struct_attrs {
         if attr.path == derive_prefix {
             let meta: Meta = attr.parse_meta().unwrap();
             match meta {
                 Meta::List(ml) => {
-                    derive_serialize_flag |= ml.nested.iter().any(|nm| *nm == NestedMeta::Meta(Meta::Path(syn::Path::parse.parse2(quote!{Serialize}).unwrap())))
+                    derive_serialize_flag |= ml.nested.iter().any(|nm| if let NestedMeta::Meta(Meta::Path(ref p)) = *nm {serde_derive_paths.contains(p)} else {false})
                 },
                 _ => {
                     panic!("unsupported meta for derive");
