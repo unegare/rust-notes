@@ -95,13 +95,12 @@ pub mod bi_list {
                 None => {
                     assert!(self.begin.is_none());
                     assert!(self.sack.is_empty());
-                    unsafe {
-                        let mut_ref: Pin<&mut _> = Pin::as_mut(&mut el);
-                        let r = Pin::get_unchecked_mut(mut_ref);
-                        let nn = NonNull::from(r);
-                        self.end = Some(nn);
-                        self.begin = Some(nn);
-                    }
+
+                    let mut_ref: Pin<&_> = Pin::as_ref(&mut el);
+                    let r = Pin::get_ref(mut_ref);
+                    let nn = NonNull::from(r);
+                    self.end = Some(nn);
+                    self.begin = Some(nn);
                 },
                 Some(ex_end) => {
                     unsafe {
@@ -146,7 +145,7 @@ fn main() {
 //    println!("{:#?}", bl);
 
     {
-        //forward
+        //forward 1 -> 2 -> 3 <- 2 -> 3 -> 4
         let mut it = bl.get_begin().unwrap();
         let end = NonNull::from(bl.get_end().unwrap());
         
