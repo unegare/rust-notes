@@ -7,7 +7,6 @@ pub mod bi_list {
     pub struct BiListElement<T> {
         prev: NonNull<BiListElement<T>>,
         next: NonNull<BiListElement<T>>,
-//        ctx: NonNull<BiListImpl<T>>,
         val: T,
         _pin: PhantomPinned,
     }
@@ -18,24 +17,16 @@ pub mod bi_list {
                 prev: NonNull::dangling(),
                 next: NonNull::dangling(),
                 val,
-//                ctx: NonNull::dangling(),
                 _pin: PhantomPinned,
             });
+
+            let const_ref: Pin<&Self> = Pin::as_ref(&s);
+            let r = Pin::get_ref(const_ref);
+            let nn = NonNull::from(r);
             unsafe {
                 let mut_ref: Pin<&mut Self> = Pin::as_mut(&mut s);
                 let r = Pin::get_unchecked_mut(mut_ref);
-                let nn = NonNull::from(r);
-
-                let mut_ref: Pin<&mut Self> = Pin::as_mut(&mut s);
-                let r = Pin::get_unchecked_mut(mut_ref);
                 r.prev = nn;
-
-//                let mut_ref: Pin<&mut Self> = Pin::as_mut(&mut s);
-//                let r = Pin::get_unchecked_mut(mut_ref);
-//                let nn = NonNull::from(r);
-
-                let mut_ref: Pin<&mut Self> = Pin::as_mut(&mut s);
-                let r = Pin::get_unchecked_mut(mut_ref);
                 r.next = nn;
             }
             s
